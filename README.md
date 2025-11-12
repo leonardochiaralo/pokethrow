@@ -252,8 +252,8 @@ Pokémon e todos os personagens relacionados são © Nintendo/Creatures Inc./GAM
 
 Desenvolvido por [Seu Nome]
 
-- GitHub: [@seu-usuario](https://github.com/seu-usuario)
-- LinkedIn: [Seu LinkedIn](https://linkedin.com/in/seu-perfil)
+- GitHub: [@leonardochiaralo](https://github.com/leonardochiaralo)
+- LinkedIn: [Leonardo Chiaralo](https://linkedin.com/in/leonardochiaralo)
 
 ---
 
