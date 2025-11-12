@@ -1,27 +1,31 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using UnityEngine.Networking;
 
 /// <summary>
-/// Gerenciador principal do jogo
-/// Controla o fluxo: iniciar jogo → sortear → capturar → exibir resultado
+/// Gerenciador principal do jogo com silhuetas dinâmicas
 /// </summary>
 public class GameManager : MonoBehaviour
 {
     [Header("Referências da Cena")]
-    public GameObject silhouettePrefab;      // Silhueta do Pokémon
-    public GameObject pokeballPrefab;        // Prefab da Pokébola
-    public Transform spawnPoint;             // Ponto de spawn da pokébola
-    public Transform targetPoint;            // Posição da silhueta (alvo)
+    public GameObject silhouettePrefab;      // Prefab com SpriteRenderer
+    public GameObject pokeballPrefab;
+    public Transform spawnPoint;
+    public Transform targetPoint;
     
     [Header("UI")]
-    public Text feedbackText;                // Texto de feedback para o jogador
-    public GameObject pokemonDisplay;        // Objeto que exibirá o Pokémon capturado
-    public Image pokemonImage;               // Imagem do Pokémon
-    public Text pokemonNameText;             // Nome do Pokémon
+    public Text feedbackText;
+    public GameObject pokemonDisplay;
+    public Image pokemonImage;
+    public Text pokemonNameText;
     
     [Header("Configurações")]
-    public float resetDelay = 3f;            // Tempo antes de resetar após captura
+    public float resetDelay = 3f;
+    
+    [Header("Configurações de Silhueta")]
+    public bool useLocalSilhouettes = false;  // true = pasta Resources, false = web
+    public string silhouetteUrlPattern = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/{0}.png";
     
     // Estado do jogo
     private int currentPokemonId;
@@ -32,49 +36,33 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        // Inicializa o display do Pokémon como oculto
         if (pokemonDisplay != null)
             pokemonDisplay.SetActive(false);
     }
 
-    /// <summary>
-    /// Chamado pelo React quando o jogador clica em "Jogar"
-    /// </summary>
     public void StartGame()
     {
-        Debug.Log("========== START GAME CHAMADO ==========");
-
-        if (isPlaying)
-        {
-            Debug.Log("⚠️ Jogo já está rodando!");
-            return;
-        }
+        if (isPlaying) return;
         
         Debug.Log("🎮 Jogo iniciado!");
         isPlaying = true;
         
-        // Limpa a cena
-        Debug.Log("Limpando cena...");
         ResetScene();
         
         // Sorteia um Pokémon aleatório (1-150)
         currentPokemonId = Random.Range(1, 151);
         Debug.Log($"🎲 Pokémon sorteado: #{currentPokemonId}");
         
-        // Cria a silhueta na cena
-        Debug.Log("Criando silhueta...");
+        // Cria a silhueta
         SpawnSilhouette();
         
         // Cria a pokébola
-        Debug.Log("Criando pokébola...");
         SpawnPokeball();
         
-        // Solicita dados do Pokémon ao React
-        Debug.Log($"Solicitando dados do Pokémon #{currentPokemonId}...");
+        // Solicita dados do Pokémon
         WebGLBridge.RequestPokemonData(currentPokemonId);
-
+        
         UpdateFeedback("Arraste e solte a Pokébola!");
-        Debug.Log("========== START GAME CONCLUÍDO ==========");
     }
 
     /// <summary>
@@ -87,7 +75,7 @@ public class GameManager : MonoBehaviour
         
         currentSilhouette = Instantiate(silhouettePrefab, targetPoint.position, Quaternion.identity);
         
-        // Adiciona um collider para detectar a captura
+        // Adiciona collider se não tiver
         if (currentSilhouette.GetComponent<Collider2D>() == null)
         {
             CircleCollider2D collider = currentSilhouette.AddComponent<CircleCollider2D>();
@@ -95,68 +83,126 @@ public class GameManager : MonoBehaviour
             collider.radius = 1f;
         }
         
+        // Adiciona tag
+        currentSilhouette.tag = "PokemonSilhouette";
+        
+        // Carrega a imagem da silhueta
+        StartCoroutine(LoadSilhouetteImage(currentPokemonId));
+        
         Debug.Log("👤 Silhueta criada!");
     }
 
     /// <summary>
-    /// Cria a pokébola na posição inicial
+    /// Carrega a imagem da silhueta (local ou web)
     /// </summary>
-    void SpawnPokeball()
+    IEnumerator LoadSilhouetteImage(int pokemonId)
     {
-        Debug.Log("=== SPAWN POKEBALL INICIADO ===");
-
-        if (currentPokeball != null)
-        {
-            Debug.Log("Destruindo pokébola anterior...");
-            Destroy(currentPokeball);
-        }
-
-        if (pokeballPrefab == null)
-        {
-            Debug.LogError("❌ ERRO: pokeballPrefab está NULL! Arraste o prefab no Inspector!");
-            return;
-        }
-
-        if (spawnPoint == null)
-        {
-            Debug.LogError("❌ ERRO: spawnPoint está NULL!");
-            return;
-        }
-
-        Debug.Log($"SpawnPoint position: {spawnPoint.position}");
-
-        currentPokeball = Instantiate(pokeballPrefab, spawnPoint.position, Quaternion.identity);
-
-        if (currentPokeball == null)
-        {
-            Debug.LogError("❌ ERRO: Falha ao instanciar pokébola!");
-            return;
-        }
-
-        Debug.Log($"✅ Pokébola instanciada! Position: {currentPokeball.transform.position}");
+        SpriteRenderer spriteRenderer = currentSilhouette.GetComponent<SpriteRenderer>();
         
-        // Configura o controller da pokébola
-        PokeballController controller = currentPokeball.GetComponent<PokeballController>();
-        if (controller != null)
+        if (spriteRenderer == null)
         {
-            Debug.Log("✅ PokeballController encontrado!");
-            controller.SetGameManager(this);
+            Debug.LogError("❌ SpriteRenderer não encontrado na silhueta!");
+            yield break;
+        }
+
+        if (useLocalSilhouettes)
+        {
+            // Carrega da pasta Resources/Silhouettes
+            Sprite silhouette = Resources.Load<Sprite>($"Silhouettes/{pokemonId}");
+            
+            if (silhouette != null)
+            {
+                spriteRenderer.sprite = silhouette;
+                Debug.Log($"✅ Silhueta local carregada: {pokemonId}");
+            }
+            else
+            {
+                Debug.LogWarning($"⚠️ Silhueta local não encontrada para Pokémon #{pokemonId}");
+            }
         }
         else
         {
-            Debug.LogError("❌ ERRO: PokeballController não encontrado no prefab!");
+            // Carrega da web
+            string url = string.Format(silhouetteUrlPattern, pokemonId);
+            
+            UnityWebRequest request = UnityWebRequestTexture.GetTexture(url);
+            yield return request.SendWebRequest();
+            
+            if (request.result == UnityWebRequest.Result.Success)
+            {
+                Texture2D texture = DownloadHandlerTexture.GetContent(request);
+                Sprite sprite = Sprite.Create(
+                    texture,
+                    new Rect(0, 0, texture.width, texture.height),
+                    new Vector2(0.5f, 0.5f),
+                    100f  // Pixels per unit
+                );
+                
+                spriteRenderer.sprite = sprite;
+
+                // Aplica cor preta para criar efeito de silhueta
+                spriteRenderer.color = Color.black;
+                
+                // Ajusta o tamanho da silhueta
+                float tamanhoDesejado = 5f; // Mude este valor para aumentar/diminuir
+                currentSilhouette.transform.localScale = Vector3.one * tamanhoDesejado;
+                
+                Debug.Log($"✅ Silhueta da web carregada: {pokemonId}");
+            }
+            else
+            {
+                Debug.LogError($"❌ Erro ao carregar silhueta da web: {request.error}");
+            }
         }
-            Debug.Log("⚪ Pokébola criada!");
+        
+        // Ajusta o tamanho da silhueta
+        AdjustSilhouetteSize(spriteRenderer);
     }
 
     /// <summary>
-    /// Chamado quando a pokébola colide com a silhueta
+    /// Ajusta o tamanho da silhueta para caber na tela
     /// </summary>
+    void AdjustSilhouetteSize(SpriteRenderer spriteRenderer)
+    {
+        if (spriteRenderer == null || spriteRenderer.sprite == null) return;
+        
+        // Tamanho máximo desejado (em unidades do mundo)
+        float maxSize = 3f;
+        
+        // Calcula o tamanho atual
+        Bounds bounds = spriteRenderer.bounds;
+        float maxDimension = Mathf.Max(bounds.size.x, bounds.size.y);
+        
+        // Calcula a escala necessária
+        if (maxDimension > maxSize)
+        {
+            float scale = maxSize / maxDimension;
+            currentSilhouette.transform.localScale = Vector3.one * scale;
+        }
+        
+        Debug.Log($"📏 Silhueta ajustada. Tamanho: {bounds.size}");
+    }
+
+    void SpawnPokeball()
+    {
+        if (currentPokeball != null)
+            Destroy(currentPokeball);
+        
+        currentPokeball = Instantiate(pokeballPrefab, spawnPoint.position, Quaternion.identity);
+        
+        PokeballController controller = currentPokeball.GetComponent<PokeballController>();
+        if (controller != null)
+        {
+            controller.SetGameManager(this);
+        }
+        
+        Debug.Log("⚪ Pokébola criada!");
+    }
+
     public void OnPokeballHitTarget(float throwForce, float accuracy)
     {
         Debug.Log($"💥 Colisão! Força: {throwForce:F2}, Precisão: {accuracy:F2}");
         
-        // Calcula a chance de captura
         bool captureSuccess = CaptureSystem.CalculateCapture(throwForce, accuracy);
         
         if (captureSuccess)
@@ -169,21 +215,14 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Lida com captura bem-sucedida
-    /// </summary>
     void HandleCaptureSuccess()
     {
         Debug.Log("✅ Captura bem-sucedida!");
         UpdateFeedback("Capturado! Carregando dados...");
         
-        // Aguarda os dados do React
         StartCoroutine(WaitForPokemonData());
     }
 
-    /// <summary>
-    /// Aguarda os dados do Pokémon chegarem do React
-    /// </summary>
     IEnumerator WaitForPokemonData()
     {
         float timeout = 5f;
@@ -198,11 +237,7 @@ public class GameManager : MonoBehaviour
         if (!string.IsNullOrEmpty(currentPokemonData))
         {
             DisplayPokemon();
-            
-            // Notifica o React para salvar no histórico
             WebGLBridge.NotifyCaptureSuccess(currentPokemonData);
-            
-            // Reseta após um delay
             StartCoroutine(ResetAfterDelay());
         }
         else
@@ -213,12 +248,8 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Exibe o Pokémon capturado na tela
-    /// </summary>
     void DisplayPokemon()
     {
-        // Parse dos dados JSON
         PokemonData data = JsonUtility.FromJson<PokemonData>(currentPokemonData);
         
         if (pokemonDisplay != null)
@@ -228,37 +259,63 @@ public class GameManager : MonoBehaviour
             if (pokemonNameText != null)
                 pokemonNameText.text = $"#{data.id} {data.name.ToUpper()}";
             
-            // Carrega a imagem do Pokémon
             if (pokemonImage != null && !string.IsNullOrEmpty(data.image))
             {
                 StartCoroutine(LoadPokemonImage(data.image));
             }
         }
         
-        // Remove a silhueta
+        // Remove a silhueta (substitui pela imagem colorida)
         if (currentSilhouette != null)
-            Destroy(currentSilhouette);
+        {
+            // Fade out animation (opcional)
+            StartCoroutine(FadeOutSilhouette());
+        }
         
         UpdateFeedback($"Você capturou {data.name}!");
         Debug.Log($"🎉 Pokémon exibido: {data.name}");
     }
 
     /// <summary>
-    /// Carrega a imagem do Pokémon da URL
+    /// Efeito de fade out na silhueta
     /// </summary>
+    IEnumerator FadeOutSilhouette()
+    {
+        SpriteRenderer spriteRenderer = currentSilhouette.GetComponent<SpriteRenderer>();
+        
+        if (spriteRenderer != null)
+        {
+            float duration = 0.5f;
+            float elapsed = 0f;
+            Color startColor = spriteRenderer.color;
+            
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float alpha = Mathf.Lerp(1f, 0f, elapsed / duration);
+                spriteRenderer.color = new Color(startColor.r, startColor.g, startColor.b, alpha);
+                yield return null;
+            }
+        }
+        
+        Destroy(currentSilhouette);
+    }
+
     IEnumerator LoadPokemonImage(string url)
     {
-        UnityEngine.Networking.UnityWebRequest request = UnityEngine.Networking.UnityWebRequestTexture.GetTexture(url);
+        UnityWebRequest request = UnityWebRequestTexture.GetTexture(url);
         yield return request.SendWebRequest();
         
-        if (request.result == UnityEngine.Networking.UnityWebRequest.Result.Success)
+        if (request.result == UnityWebRequest.Result.Success)
         {
-            Texture2D texture = UnityEngine.Networking.DownloadHandlerTexture.GetContent(request);
+            Texture2D texture = DownloadHandlerTexture.GetContent(request);
             pokemonImage.sprite = Sprite.Create(
                 texture,
                 new Rect(0, 0, texture.width, texture.height),
                 new Vector2(0.5f, 0.5f)
             );
+            
+            Debug.Log("✅ Imagem do Pokémon carregada!");
         }
         else
         {
@@ -266,24 +323,16 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Lida com captura falhada
-    /// </summary>
     void HandleCaptureFailed()
     {
         Debug.Log("❌ Captura falhou!");
         UpdateFeedback("Falhou! Tente novamente!");
         
-        // Notifica o React
         WebGLBridge.NotifyCaptureFailed();
         
-        // Reseta a pokébola após um delay
         StartCoroutine(ResetPokeballAfterDelay(2f));
     }
 
-    /// <summary>
-    /// Reseta apenas a pokébola (para tentar novamente)
-    /// </summary>
     IEnumerator ResetPokeballAfterDelay(float delay)
     {
         yield return new WaitForSeconds(delay);
@@ -295,9 +344,6 @@ public class GameManager : MonoBehaviour
         UpdateFeedback("Tente novamente! Arraste a Pokébola!");
     }
 
-    /// <summary>
-    /// Reseta o jogo inteiro após um delay
-    /// </summary>
     IEnumerator ResetAfterDelay()
     {
         yield return new WaitForSeconds(resetDelay);
@@ -306,9 +352,6 @@ public class GameManager : MonoBehaviour
         UpdateFeedback("Clique em 'Jogar' para capturar outro Pokémon!");
     }
 
-    /// <summary>
-    /// Limpa toda a cena
-    /// </summary>
     void ResetScene()
     {
         if (currentPokeball != null)
@@ -323,9 +366,6 @@ public class GameManager : MonoBehaviour
         currentPokemonData = null;
     }
 
-    /// <summary>
-    /// Atualiza o texto de feedback na UI
-    /// </summary>
     void UpdateFeedback(string message)
     {
         if (feedbackText != null)
@@ -334,18 +374,12 @@ public class GameManager : MonoBehaviour
         Debug.Log($"💬 Feedback: {message}");
     }
 
-    /// <summary>
-    /// Recebe os dados do Pokémon vindos do React (chamado via SendMessage)
-    /// </summary>
     public void ReceivePokemonData(string jsonData)
     {
         currentPokemonData = jsonData;
         Debug.Log($"📦 Dados recebidos do React: {jsonData}");
     }
 
-    /// <summary>
-    /// Chamado se houver erro ao buscar dados (chamado via SendMessage)
-    /// </summary>
     public void OnPokemonDataError(string error)
     {
         Debug.LogError($"❌ Erro ao receber dados: {error}");
@@ -354,9 +388,6 @@ public class GameManager : MonoBehaviour
     }
 }
 
-/// <summary>
-/// Classe para deserializar os dados JSON do Pokémon
-/// </summary>
 [System.Serializable]
 public class PokemonData
 {
