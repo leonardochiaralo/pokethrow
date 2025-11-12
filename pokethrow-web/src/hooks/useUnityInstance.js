@@ -3,7 +3,8 @@ import { useEffect, useCallback } from "react";
 import { pokeApi } from "../services/pokeApi";
 import { useHistoryStore } from "../store/historyStore";
 
-export const useUnityInstance = () => {
+export const useUnityInstance = (onReturnToMenu) => {
+  // ⬅️ NOVO PARÂMETRO!
   const addPokemon = useHistoryStore((state) => state.addPokemon);
 
   const {
@@ -20,7 +21,6 @@ export const useUnityInstance = () => {
     codeUrl: "/unity/Build/unity.wasm",
   });
 
-  // Unity solicita dados do Pokémon
   const handleRequestPokemon = useCallback(
     async (pokemonIdStr) => {
       try {
@@ -28,10 +28,8 @@ export const useUnityInstance = () => {
         console.log("🔍 Buscando Pokémon ID:", pokemonId);
 
         const pokemonData = await pokeApi.getPokemonById(pokemonId);
-
         console.log("✅ Dados recebidos:", pokemonData);
 
-        // Envia dados de volta para Unity
         sendMessage(
           "GameManager",
           "ReceivePokemonData",
@@ -45,7 +43,6 @@ export const useUnityInstance = () => {
     [sendMessage]
   );
 
-  // Unity notifica captura bem-sucedida
   const handleCaptureSuccess = useCallback(
     (pokemonDataStr) => {
       try {
@@ -59,12 +56,17 @@ export const useUnityInstance = () => {
     [addPokemon]
   );
 
-  // Unity notifica captura falhada
   const handleCaptureFailed = useCallback(() => {
     console.log("❌ Captura falhou!");
   }, []);
 
-  // Registra a função global que o Unity vai chamar via .jslib
+  const handleReturnToMenu = useCallback(() => {
+    console.log("🔙 Voltando ao menu...");
+    if (onReturnToMenu) {
+      onReturnToMenu(); // ⬅️ CHAMA O CALLBACK!
+    }
+  }, [onReturnToMenu]);
+
   useEffect(() => {
     window.unityToReact = (eventName, data) => {
       console.log("[Unity → React]", eventName, data);
@@ -75,15 +77,21 @@ export const useUnityInstance = () => {
         handleCaptureSuccess(data);
       } else if (eventName === "OnCaptureFailed") {
         handleCaptureFailed();
+      } else if (eventName === "ReturnToMenu") {
+        handleReturnToMenu(); // ⬅️ NOVO!
       }
     };
 
     return () => {
       delete window.unityToReact;
     };
-  }, [handleRequestPokemon, handleCaptureSuccess, handleCaptureFailed]);
+  }, [
+    handleRequestPokemon,
+    handleCaptureSuccess,
+    handleCaptureFailed,
+    handleReturnToMenu,
+  ]);
 
-  // Listeners do react-unity-webgl (backup/alternativa)
   useEffect(() => {
     addEventListener("RequestPokemonData", handleRequestPokemon);
     addEventListener("OnCaptureSuccess", handleCaptureSuccess);

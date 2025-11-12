@@ -7,18 +7,20 @@ import "./App.css";
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState("menu");
+
+  // ⬅️ PASSA O CALLBACK!
   const { unityProvider, isLoaded, loadingProgression, sendMessage } =
-    useUnityInstance();
+    useUnityInstance(() => {
+      setCurrentScreen("menu"); // Volta ao menu
+    });
 
   const handlePlayClick = () => {
     setCurrentScreen("game");
   };
 
-  // Quando o Unity carregar E estiver na tela de jogo, inicia o jogo
   useEffect(() => {
     if (isLoaded && currentScreen === "game") {
       console.log("🎮 Unity carregado! Iniciando jogo...");
-      // Aguarda um momento para garantir que o Unity está pronto
       setTimeout(() => {
         sendMessage("GameManager", "StartGame");
       }, 500);
