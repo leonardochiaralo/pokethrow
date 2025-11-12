@@ -21,7 +21,7 @@ public class GameManager : MonoBehaviour
     public Text pokemonNameText;
     
     [Header("Configurações")]
-    public float resetDelay = 3f;
+    public float resetDelay = 5f;
     
     [Header("Configurações de Silhueta")]
     public bool useLocalSilhouettes = false;  // true = pasta Resources, false = web
@@ -144,7 +144,7 @@ public class GameManager : MonoBehaviour
                 spriteRenderer.color = Color.black;
                 
                 // Ajusta o tamanho da silhueta
-                float tamanhoDesejado = 5f; // Mude este valor para aumentar/diminuir
+                float tamanhoDesejado = 2f; // Mude este valor para aumentar/diminuir
                 currentSilhouette.transform.localScale = Vector3.one * tamanhoDesejado;
                 
                 Debug.Log($"✅ Silhueta da web carregada: {pokemonId}");
@@ -347,9 +347,12 @@ public class GameManager : MonoBehaviour
     IEnumerator ResetAfterDelay()
     {
         yield return new WaitForSeconds(resetDelay);
+
         ResetScene();
         isPlaying = false;
-        UpdateFeedback("Clique em 'Jogar' para capturar outro Pokémon!");
+
+        WebGLBridge.ReturnToMenu();
+        Debug.Log("🔙 Voltando ao menu...");
     }
 
     void ResetScene()

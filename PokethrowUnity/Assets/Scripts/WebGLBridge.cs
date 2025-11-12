@@ -45,4 +45,12 @@ public class WebGLBridge : MonoBehaviour
     {
         SendToReact("OnCaptureFailed", "");
     }
+
+    /// <summary>
+    /// Notifica o React para voltar ao menu
+    /// </summary>
+    public static void ReturnToMenu()
+    {
+        SendToReact("ReturnToMenu", "");
+    }
 }
