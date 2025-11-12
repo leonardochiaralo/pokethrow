@@ -1,0 +1,165 @@
+.game-canvas-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  animation: slideIn 0.5s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.game-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+}
+
+.game-header h2 {
+  font-size: 1.8rem;
+  color: var(--primary-yellow);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  letter-spacing: 1px;
+}
+
+.unity-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  min-height: 600px;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--dark-bg) 0%, var(--darker-bg) 100%);
+  z-index: 10;
+}
+
+.loading-content {
+  text-align: center;
+  padding: 40px;
+}
+
+.pokeball-loader {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 30px;
+  position: relative;
+  animation: spin 1.5s linear infinite;
+}
+
+.pokeball-loader::before {
+  content: "";
+  position: absolute;
+  width: 80px;
+  height: 40px;
+  background: var(--primary-red);
+  border-radius: 80px 80px 0 0;
+  top: 0;
+  border: 4px solid #000;
+  border-bottom: 2px solid #000;
+}
+
+.pokeball-loader::after {
+  content: "";
+  position: absolute;
+  width: 80px;
+  height: 40px;
+  background: white;
+  border-radius: 0 0 80px 80px;
+  bottom: 0;
+  border: 4px solid #000;
+  border-top: 2px solid #000;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-content p {
+  font-size: 1.3rem;
+  margin-bottom: 20px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.progress-bar {
+  width: 300px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 20px auto;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--primary-red),
+    var(--primary-yellow),
+    var(--primary-blue)
+  );
+  transition: width 0.3s ease;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.loading-content span {
+  font-size: 1.1rem;
+  color: var(--primary-yellow);
+  font-weight: 600;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .game-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .game-header h2 {
+    font-size: 1.4rem;
+  }
+
+  .unity-wrapper {
+    min-height: 400px;
+  }
+
+  .progress-bar {
+    width: 250px;
+  }
+}

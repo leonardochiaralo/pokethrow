@@ -1,0 +1,58 @@
+# Unity
+PokethrowUnity/[Ll]ibrary/
+PokethrowUnity/[Tt]emp/
+PokethrowUnity/[Oo]bj/
+PokethrowUnity/[Bb]uild/
+PokethrowUnity/[Bb]uilds/
+PokethrowUnity/[Ll]ogs/
+PokethrowUnity/[Uu]ser[Ss]ettings/
+
+# Unity auto-generated files
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Unity meta files
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Node
+pokethrow-web/node_modules/
+pokethrow-web/dist/
+pokethrow-web/.env
+pokethrow-web/.env.local
+pokethrow-web/.env.production
+pokethrow-web/npm-debug.log*
+pokethrow-web/yarn-debug.log*
+pokethrow-web/yarn-error.log*
+
+# Build WebGL (opcional - se quiser versionar o build, remova estas linhas)
+pokethrow-web/public/unity/Build/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
