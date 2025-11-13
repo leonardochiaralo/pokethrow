@@ -832,10 +832,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AudioManager
   sfxSource: {fileID: 961203946}
   musicSource: {fileID: 961203945}
-  throwSound: {fileID: 8300000, guid: 596b678d2ed93ba4dadc48d332bd01dc, type: 3}
-  hitSound: {fileID: 8300000, guid: 70bc5295359593947996fd3c092eab48, type: 3}
-  captureSuccess: {fileID: 8300000, guid: e4d68132114fc5546898bd183b9fd2d8, type: 3}
-  captureFail: {fileID: 8300000, guid: c72925c299fe2cd4ebd6c7bd495524b7, type: 3}
+  throwClip: {fileID: 8300000, guid: 596b678d2ed93ba4dadc48d332bd01dc, type: 3}
+  hitClip: {fileID: 8300000, guid: 70bc5295359593947996fd3c092eab48, type: 3}
+  captureSuccessClip: {fileID: 8300000, guid: e4d68132114fc5546898bd183b9fd2d8, type: 3}
+  captureFailClip: {fileID: 8300000, guid: c72925c299fe2cd4ebd6c7bd495524b7, type: 3}
   sfxVolume: 0.7
   musicVolume: 0.3
 --- !u!4 &961203948
