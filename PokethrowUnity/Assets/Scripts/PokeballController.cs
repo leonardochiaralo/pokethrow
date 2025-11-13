@@ -6,6 +6,9 @@ using UnityEngine;
 /// </summary>
 public class PokeballController : MonoBehaviour
 {
+    [Header("UI")]
+    public ForceBar forceBar;  // Referência à barra de força
+    
     [Header("Configurações de Lançamento")]
     public float maxDragDistance = 3f;       // Distância máxima de arrasto
     public float forceMultiplier = 10f;      // Multiplicador da força de lançamento
@@ -44,12 +47,25 @@ public class PokeballController : MonoBehaviour
         
         mainCamera = Camera.main;
         startPosition = transform.position;
-        
+
         // Configura LineRenderer se existir
         if (trajectoryLine != null)
         {
             trajectoryLine.positionCount = trajectoryPoints;
             trajectoryLine.enabled = false;
+        }
+        
+        if (forceBar == null)
+        {
+            forceBar = FindObjectOfType<ForceBar>();
+            if (forceBar != null)
+            {
+                Debug.Log("✅ ForceBar encontrada no Awake!");
+            }
+            else
+            {
+                Debug.LogWarning("⚠️ ForceBar não encontrada no Awake!");
+            }
         }
         
         Debug.Log("⚪ PokeballController inicializado!");
@@ -119,10 +135,29 @@ public class PokeballController : MonoBehaviour
         dragStartPosition = mouseWorldPos;
         
         Debug.Log("🖱️ Começou a arrastar a Pokébola");
-        
+
         // Ativa a linha de trajetória
         if (trajectoryLine != null)
             trajectoryLine.enabled = true;
+
+        if (forceBar == null)
+        {
+            forceBar = FindObjectOfType<ForceBar>();
+            Debug.Log("🔍 Procurando ForceBar novamente...");
+        }
+
+        Debug.Log($"ForceBar antes de Show: {forceBar != null}");
+
+        if (forceBar != null)
+        {
+            forceBar.Show();
+            forceBar.UpdateForce(0f); // Começa em 0%
+            Debug.Log("📊 Barra de força mostrada!");
+        }
+        else
+        {
+            Debug.LogError("❌ ForceBar ainda é null!");
+        }
     }
 
     /// <summary>
@@ -142,11 +177,17 @@ public class PokeballController : MonoBehaviour
         
         // Move a pokébola na direção oposta ao arrasto (como um estilingue)
         transform.position = startPosition - dragVector;
-        
+
         // Atualiza a visualização da trajetória
         if (trajectoryLine != null)
         {
             ShowTrajectory(dragVector);
+        }
+        
+        if (forceBar != null)
+        {
+            float normalizedForce = dragVector.magnitude / maxDragDistance;
+            forceBar.UpdateForce(normalizedForce);
         }
     }
 
@@ -158,10 +199,15 @@ public class PokeballController : MonoBehaviour
         if (!isDragging || wasThrown) return;
         
         isDragging = false;
-        
+
         // Oculta a linha de trajetória
         if (trajectoryLine != null)
             trajectoryLine.enabled = false;
+            
+        if (forceBar != null)
+        {
+            forceBar.Hide();
+        }
         
         // Calcula a força do lançamento
         Vector3 dragVector = dragStartPosition - mouseWorldPos;

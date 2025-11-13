@@ -13,8 +13,9 @@ public class GameManager : MonoBehaviour
     public GameObject pokeballPrefab;
     public Transform spawnPoint;
     public Transform targetPoint;
-    
+
     [Header("UI")]
+    public ForceBar forceBar;
     public Text feedbackText;
     public GameObject pokemonDisplay;
     public Image pokemonImage;
@@ -38,6 +39,11 @@ public class GameManager : MonoBehaviour
     {
         if (pokemonDisplay != null)
             pokemonDisplay.SetActive(false);
+
+        #if UNITY_EDITOR
+        Debug.Log("🧪 Modo Editor: Iniciando jogo automaticamente em 1 segundo...");
+        Invoke("StartGame", 1f);
+        #endif
     }
 
     public void StartGame()
@@ -194,6 +200,16 @@ public class GameManager : MonoBehaviour
         if (controller != null)
         {
             controller.SetGameManager(this);
+
+            if (forceBar != null)
+            {
+                controller.forceBar = forceBar;
+                Debug.Log("✅ Barra de força conectada à pokébola!");
+            }
+            else
+            {
+                Debug.LogWarning("⚠️ ForceBar não está configurado no GameManager!");
+            }
         }
         
         Debug.Log("⚪ Pokébola criada!");
