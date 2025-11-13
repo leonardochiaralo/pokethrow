@@ -46,7 +46,7 @@ public class GameManager : MonoBehaviour
         
         Debug.Log("🎮 Jogo iniciado!");
         isPlaying = true;
-        
+
         ResetScene();
         
         // Sorteia um Pokémon aleatório (1-150)
@@ -219,6 +219,12 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("✅ Captura bem-sucedida!");
         UpdateFeedback("Capturado! Carregando dados...");
+
+        // ⬇️ TOCA SOM DE SUCESSO
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayCaptureSuccessSound();
+        }
         
         StartCoroutine(WaitForPokemonData());
     }
@@ -327,6 +333,12 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("❌ Captura falhou!");
         UpdateFeedback("Falhou! Tente novamente!");
+
+        // ⬇️ TOCA SOM DE FALHA
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayCaptureFailSound();
+        }
         
         WebGLBridge.NotifyCaptureFailed();
         

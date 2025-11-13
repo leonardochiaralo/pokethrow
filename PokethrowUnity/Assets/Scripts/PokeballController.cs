@@ -189,9 +189,15 @@ public class PokeballController : MonoBehaviour
         
         // Aplica a força
         rb.AddForce(force, ForceMode2D.Impulse);
-        
+
         // Adiciona rotação para efeito visual
         rb.angularVelocity = 360f;
+        
+        // ⬇️ TOCA SOM DE ARREMESSO
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayThrowSound();
+        }
     }
 
     /// <summary>
@@ -201,13 +207,16 @@ public class PokeballController : MonoBehaviour
     {
         if (!wasThrown) return;
         
-        Debug.Log($"💥 Colidiu com: {collision.gameObject.name}");
-        
         // Verifica se colidiu com a silhueta
         if (collision.CompareTag("PokemonSilhouette") || 
             collision.gameObject.name.Contains("Silhouette"))
         {
             Debug.Log("💥 Pokébola atingiu a silhueta!");
+
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayHitSound();
+            }
             
             // Calcula a precisão baseada na distância do centro
             float accuracy = CalculateAccuracy(collision);
