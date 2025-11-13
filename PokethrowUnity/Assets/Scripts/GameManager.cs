@@ -165,7 +165,7 @@ public class GameManager : MonoBehaviour
         if (_currentPokeball.TryGetComponent(out PokeballController controller))
         {
             controller.SetGameManager(this);
-            controller.forceBar = forceBar;
+            controller.SetForceBar(forceBar);
 
             if (forceBar != null)
                 Debug.Log("✅ Barra de força conectada!");
