@@ -6,25 +6,22 @@ export const useHistoryStore = create(
     (set, get) => ({
       capturedPokemons: [],
 
-      addPokemon: (pokemon) => {
+      addPokemon: (pokemon) =>
         set((state) => ({
           capturedPokemons: [
             {
               ...pokemon,
               capturedAt: new Date().toISOString(),
-              id: Date.now(), // ID único para a captura
+              id: Date.now(),
             },
             ...state.capturedPokemons,
           ],
-        }));
-      },
+        })),
 
       clearHistory: () => set({ capturedPokemons: [] }),
 
       getTotalCaptures: () => get().capturedPokemons.length,
     }),
-    {
-      name: "pokethrow-history", // Nome da chave no localStorage
-    }
+    { name: "pokethrow-history" }
   )
 );

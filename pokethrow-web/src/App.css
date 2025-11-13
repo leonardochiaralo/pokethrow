@@ -6,7 +6,6 @@
   overflow: hidden;
 }
 
-/* Animação de fundo com Pokébolas */
 .app::before {
   content: "";
   position: fixed;
@@ -38,7 +37,6 @@
   }
 }
 
-/* Botões globais */
 .btn {
   padding: 14px 32px;
   font-size: 1.1rem;

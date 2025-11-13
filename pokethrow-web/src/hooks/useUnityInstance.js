@@ -3,8 +3,7 @@ import { useEffect, useCallback } from "react";
 import { pokeApi } from "../services/pokeApi";
 import { useHistoryStore } from "../store/historyStore";
 
-export const useUnityInstance = (onReturnToMenu) => {
-  // ⬅️ NOVO PARÂMETRO!
+export function useUnityInstance(onReturnToMenu) {
   const addPokemon = useHistoryStore((state) => state.addPokemon);
 
   const {
@@ -24,11 +23,8 @@ export const useUnityInstance = (onReturnToMenu) => {
   const handleRequestPokemon = useCallback(
     async (pokemonIdStr) => {
       try {
-        const pokemonId = parseInt(pokemonIdStr);
-        console.log("🔍 Buscando Pokémon ID:", pokemonId);
-
+        const pokemonId = parseInt(pokemonIdStr, 10);
         const pokemonData = await pokeApi.getPokemonById(pokemonId);
-        console.log("✅ Dados recebidos:", pokemonData);
 
         sendMessage(
           "GameManager",
@@ -36,7 +32,6 @@ export const useUnityInstance = (onReturnToMenu) => {
           JSON.stringify(pokemonData)
         );
       } catch (error) {
-        console.error("❌ Erro ao buscar Pokémon:", error);
         sendMessage("GameManager", "OnPokemonDataError", error.message);
       }
     },
@@ -48,49 +43,47 @@ export const useUnityInstance = (onReturnToMenu) => {
       try {
         const pokemonData = JSON.parse(pokemonDataStr);
         addPokemon(pokemonData);
-        console.log("🎉 Pokémon capturado e salvo:", pokemonData.name);
       } catch (error) {
-        console.error("❌ Erro ao salvar captura:", error);
+        console.error("Erro ao processar Pokémon capturado:", error);
       }
     },
     [addPokemon]
   );
 
   const handleCaptureFailed = useCallback(() => {
-    console.log("❌ Captura falhou!");
+    console.warn("Captura falhou.");
   }, []);
 
   const handleReturnToMenu = useCallback(() => {
-    console.log("🔙 Voltando ao menu...");
-    if (onReturnToMenu) {
-      onReturnToMenu(); // ⬅️ CHAMA O CALLBACK!
-    }
+    if (onReturnToMenu) onReturnToMenu();
   }, [onReturnToMenu]);
 
+  const handleUnityEvent = useCallback(
+    (eventName, data) => {
+      const eventHandlers = {
+        RequestPokemonData: () => handleRequestPokemon(data),
+        OnCaptureSuccess: () => handleCaptureSuccess(data),
+        OnCaptureFailed: () => handleCaptureFailed(),
+        ReturnToMenu: () => handleReturnToMenu(),
+      };
+
+      const handler = eventHandlers[eventName];
+      if (handler) handler();
+    },
+    [
+      handleRequestPokemon,
+      handleCaptureSuccess,
+      handleCaptureFailed,
+      handleReturnToMenu,
+    ]
+  );
+
   useEffect(() => {
-    window.unityToReact = (eventName, data) => {
-      console.log("[Unity → React]", eventName, data);
-
-      if (eventName === "RequestPokemonData") {
-        handleRequestPokemon(data);
-      } else if (eventName === "OnCaptureSuccess") {
-        handleCaptureSuccess(data);
-      } else if (eventName === "OnCaptureFailed") {
-        handleCaptureFailed();
-      } else if (eventName === "ReturnToMenu") {
-        handleReturnToMenu(); // ⬅️ NOVO!
-      }
-    };
-
+    window.unityToReact = handleUnityEvent;
     return () => {
       delete window.unityToReact;
     };
-  }, [
-    handleRequestPokemon,
-    handleCaptureSuccess,
-    handleCaptureFailed,
-    handleReturnToMenu,
-  ]);
+  }, [handleUnityEvent]);
 
   useEffect(() => {
     addEventListener("RequestPokemonData", handleRequestPokemon);
@@ -110,10 +103,5 @@ export const useUnityInstance = (onReturnToMenu) => {
     handleCaptureFailed,
   ]);
 
-  return {
-    unityProvider,
-    isLoaded,
-    loadingProgression,
-    sendMessage,
-  };
-};
+  return { unityProvider, isLoaded, loadingProgression, sendMessage };
+}

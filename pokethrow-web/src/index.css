@@ -1,4 +1,3 @@
-/* Reset e configurações globais */
 * {
   margin: 0;
   padding: 0;
@@ -6,7 +5,6 @@
 }
 
 :root {
-  /* Cores principais */
   --primary-red: #ff0000;
   --primary-blue: #3b4cca;
   --primary-yellow: #ffde00;
@@ -14,7 +12,6 @@
   --darker-bg: #0f0f1e;
   --card-bg: #16213e;
 
-  /* Cores de tipos Pokémon */
   --type-normal: #a8a878;
   --type-fire: #f08030;
   --type-water: #6890f0;
@@ -34,12 +31,10 @@
   --type-steel: #b8b8d0;
   --type-fairy: #ee99ac;
 
-  /* Sombras */
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
 
-  /* Transições */
   --transition-fast: 0.2s ease;
   --transition-normal: 0.3s ease;
   --transition-slow: 0.5s ease;
@@ -57,7 +52,6 @@ body {
   min-height: 100vh;
 }
 
-/* Utilitários */
 .text-center {
   text-align: center;
 }

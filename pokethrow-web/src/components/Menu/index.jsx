@@ -1,6 +1,6 @@
 import "./Menu.css";
 
-export const Menu = ({ onPlayClick, onHistoryClick }) => {
+function Menu({ onPlayClick, onHistoryClick }) {
   return (
     <div className="menu-container">
       <div className="menu-content">
@@ -8,25 +8,23 @@ export const Menu = ({ onPlayClick, onHistoryClick }) => {
           <span className="poke">Poké</span>
           <span className="throw">Throw</span>
         </h1>
-
         <p className="game-subtitle">Capture Pokémons lendários!</p>
-
         <div className="menu-buttons">
           <button className="btn btn-play" onClick={onPlayClick}>
             <span className="btn-icon">🎮</span>
             Jogar
           </button>
-
           <button className="btn btn-history" onClick={onHistoryClick}>
             <span className="btn-icon">📜</span>
             Histórico
           </button>
         </div>
-
-        <div className="menu-footer">
+        <footer className="menu-footer">
           <p>Arraste a Pokébola e solte para capturar!</p>
-        </div>
+        </footer>
       </div>
     </div>
   );
-};
+}
+
+export default Menu;

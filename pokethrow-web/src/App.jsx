@@ -1,61 +1,66 @@
-import { useState, useEffect } from "react";
-import { Menu } from "./components/Menu/Menu";
-import { GameCanvas } from "./components/GameCanvas/GameCanvas";
-import { History } from "./components/History/History";
+import { useState, useEffect, useCallback } from "react";
+import Menu from "./components/Menu";
+import GameCanvas from "./components/GameCanvas";
+import History from "./components/History";
 import { useUnityInstance } from "./hooks/useUnityInstance";
 import "./App.css";
 
+const SCREENS = {
+  MENU: "menu",
+  GAME: "game",
+  HISTORY: "history",
+};
+
 function App() {
-  const [currentScreen, setCurrentScreen] = useState("menu");
+  const [currentScreen, setCurrentScreen] = useState(SCREENS.MENU);
 
-  // ⬅️ PASSA O CALLBACK!
   const { unityProvider, isLoaded, loadingProgression, sendMessage } =
-    useUnityInstance(() => {
-      setCurrentScreen("menu"); // Volta ao menu
-    });
+    useUnityInstance(() => setCurrentScreen(SCREENS.MENU));
 
-  const handlePlayClick = () => {
-    setCurrentScreen("game");
-  };
+  const handleNavigate = useCallback(
+    (screen) => () => setCurrentScreen(screen),
+    []
+  );
 
   useEffect(() => {
-    if (isLoaded && currentScreen === "game") {
-      console.log("🎮 Unity carregado! Iniciando jogo...");
-      setTimeout(() => {
+    if (isLoaded && currentScreen === SCREENS.GAME) {
+      const startTimeout = setTimeout(() => {
         sendMessage("GameManager", "StartGame");
       }, 500);
+
+      return () => clearTimeout(startTimeout);
     }
   }, [isLoaded, currentScreen, sendMessage]);
 
-  const handleHistoryClick = () => {
-    setCurrentScreen("history");
+  const renderScreen = () => {
+    switch (currentScreen) {
+      case SCREENS.MENU:
+        return (
+          <Menu
+            onPlayClick={handleNavigate(SCREENS.GAME)}
+            onHistoryClick={handleNavigate(SCREENS.HISTORY)}
+          />
+        );
+
+      case SCREENS.GAME:
+        return (
+          <GameCanvas
+            unityProvider={unityProvider}
+            isLoaded={isLoaded}
+            loadingProgression={loadingProgression}
+            onBack={handleNavigate(SCREENS.MENU)}
+          />
+        );
+
+      case SCREENS.HISTORY:
+        return <History onBack={handleNavigate(SCREENS.MENU)} />;
+
+      default:
+        return null;
+    }
   };
 
-  const handleBackToMenu = () => {
-    setCurrentScreen("menu");
-  };
-
-  return (
-    <div className="app">
-      {currentScreen === "menu" && (
-        <Menu
-          onPlayClick={handlePlayClick}
-          onHistoryClick={handleHistoryClick}
-        />
-      )}
-
-      {currentScreen === "game" && (
-        <GameCanvas
-          unityProvider={unityProvider}
-          isLoaded={isLoaded}
-          loadingProgression={loadingProgression}
-          onBack={handleBackToMenu}
-        />
-      )}
-
-      {currentScreen === "history" && <History onBack={handleBackToMenu} />}
-    </div>
-  );
+  return <div className="app">{renderScreen()}</div>;
 }
 
 export default App;
