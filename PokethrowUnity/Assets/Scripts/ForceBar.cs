@@ -1,90 +1,84 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Controla a barra de força visual
-/// </summary>
 public class ForceBar : MonoBehaviour
 {
     [Header("Referências")]
-    public GameObject fillBarObject;   // GameObject da barra ⬅️ MUDOU!
-    public Image fillImage;            // Imagem da barra (para mudar cor)
-    public Text percentageText;        // Texto de porcentagem (opcional)
+    [SerializeField] private GameObject fillBarObject;
+    [SerializeField] private Image fillImage;
+    [SerializeField] private Text percentageText;
 
     [Header("Configurações")]
-    public float maxWidth = 280f;      // Largura máxima da barra
-    public Color weakColor = Color.red;      // Cor fraca (0-33%)
-    public Color mediumColor = Color.yellow; // Cor média (34-66%)
-    public Color strongColor = Color.green;  // Cor forte (67-100%)
+    [SerializeField] private float maxWidth = 280f;
+    [SerializeField] private Color weakColor = Color.red;
+    [SerializeField] private Color mediumColor = Color.yellow;
+    [SerializeField] private Color strongColor = Color.green;
 
-    private RectTransform fillBar;     // Cache do RectTransform
+    private RectTransform _fillBar;
 
-    void Start()
+    private void Awake()
     {
-        // Pega o RectTransform do GameObject
         if (fillBarObject != null)
-        {
-            fillBar = fillBarObject.GetComponent<RectTransform>();
-        }
+            _fillBar = fillBarObject.GetComponent<RectTransform>();
 
-        // Começa oculto
         Hide();
     }
 
-    /// <summary>
-    /// Mostra a barra de força
-    /// </summary>
     public void Show()
     {
-        gameObject.SetActive(true);
-        Debug.Log("📊 Barra de força ATIVADA!");
+        SetActive(true);
+        #if UNITY_EDITOR
+            Debug.Log("📊 Barra de força ATIVADA!");
+        #endif
     }
 
-    /// <summary>
-    /// Oculta a barra de força
-    /// </summary>
     public void Hide()
     {
-        gameObject.SetActive(false);
-        Debug.Log("📊 Barra de força DESATIVADA!");
+        SetActive(false);
+        #if UNITY_EDITOR
+            Debug.Log("📊 Barra de força DESATIVADA!");
+        #endif
     }
 
-    /// <summary>
-    /// Atualiza a barra com base na força (0 a 1)
-    /// </summary>
     public void UpdateForce(float normalizedForce)
     {
-        // Normaliza entre 0 e 1
         normalizedForce = Mathf.Clamp01(normalizedForce);
+        UpdateBarWidth(normalizedForce);
+        UpdateBarColor(normalizedForce);
+        UpdatePercentageText(normalizedForce);
+    }
 
-        // Atualiza largura da barra
-        if (fillBar != null)
-        {
-            fillBar.sizeDelta = new Vector2(maxWidth * normalizedForce, fillBar.sizeDelta.y);
-        }
+    private void SetActive(bool state)
+    {
+        if (gameObject.activeSelf != state)
+            gameObject.SetActive(state);
+    }
 
-        // Atualiza cor baseada na força
-        if (fillImage != null)
-        {
-            if (normalizedForce < 0.33f)
-            {
-                fillImage.color = weakColor;
-            }
-            else if (normalizedForce < 0.67f)
-            {
-                fillImage.color = mediumColor;
-            }
-            else
-            {
-                fillImage.color = strongColor;
-            }
-        }
+    private void UpdateBarWidth(float normalizedForce)
+    {
+        if (_fillBar == null) return;
 
-        // Atualiza texto (se existir)
-        if (percentageText != null)
+        float newWidth = maxWidth * normalizedForce;
+        _fillBar.sizeDelta = new Vector2(newWidth, _fillBar.sizeDelta.y);
+    }
+
+    private void UpdateBarColor(float normalizedForce)
+    {
+        if (fillImage == null) return;
+
+        fillImage.color = normalizedForce switch
         {
-            int percentage = Mathf.RoundToInt(normalizedForce * 100);
-            percentageText.text = $"{percentage}%";
-        }
+            < 0.33f => weakColor,
+            < 0.67f => mediumColor,
+            _ => strongColor
+        };
+    }
+
+    private void UpdatePercentageText(float normalizedForce)
+    {
+        if (percentageText == null) return;
+
+        int percentage = Mathf.RoundToInt(normalizedForce * 100);
+        percentageText.text = $"{percentage}%";
     }
 }
