@@ -1,9 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Sistema de cálculo de captura de Pokémon.
-/// A chance de captura depende da força do arremesso e da precisão do acerto.
-/// </summary>
 public static class CaptureSystem
 {
     private const float BaseCaptureRate = 0.50f;
@@ -23,7 +19,9 @@ public static class CaptureSystem
         float roll = Random.Range(0f, 1f);
         bool success = roll <= captureRate;
 
-        LogCaptureDetails(throwForce, accuracy, forceBonus, accuracyBonus, captureRate, roll, success);
+        #if UNITY_EDITOR
+            LogCaptureDetails(throwForce, accuracy, forceBonus, accuracyBonus, captureRate, roll, success);
+        #endif
 
         return success;
     }
@@ -48,24 +46,24 @@ public static class CaptureSystem
         };
     }
 
-#if UNITY_EDITOR
-    [System.Diagnostics.Conditional("UNITY_EDITOR")]
-    public static void SimulateCaptures(int attempts = 100)
-    {
-        int successes = 0;
-        Debug.Log($"🧪 Simulando {attempts} capturas...");
-
-        for (int i = 0; i < attempts; i++)
+    #if UNITY_EDITOR
+        [System.Diagnostics.Conditional("UNITY_EDITOR")]
+        public static void SimulateCaptures(int attempts = 100)
         {
-            float randomForce = Random.Range(10f, 50f);
-            float randomAccuracy = Random.Range(0f, 1f);
-            if (CalculateCapture(randomForce, randomAccuracy)) successes++;
-        }
+            int successes = 0;
+            Debug.Log($"🧪 Simulando {attempts} capturas...");
 
-        float successRate = (float)successes / attempts;
-        Debug.Log($"📈 Taxa de sucesso: {successRate:P1} ({successes}/{attempts})");
-    }
-#endif
+            for (int i = 0; i < attempts; i++)
+            {
+                float randomForce = Random.Range(10f, 50f);
+                float randomAccuracy = Random.Range(0f, 1f);
+                if (CalculateCapture(randomForce, randomAccuracy)) successes++;
+            }
+
+            float successRate = (float)successes / attempts;
+            Debug.Log($"📈 Taxa de sucesso: {successRate:P1} ({successes}/{attempts})");
+        }
+    #endif
 
     private static float CalculateForceBonus(float force)
     {
@@ -87,9 +85,9 @@ public static class CaptureSystem
         return normalized * MaxAccuracyBonus;
     }
 
-#if UNITY_EDITOR
-    private static void LogCaptureDetails(float force, float accuracy, float forceBonus, float accuracyBonus, float rate, float roll, bool success)
-    {
+    #if UNITY_EDITOR
+        private static void LogCaptureDetails(float force, float accuracy, float forceBonus, float accuracyBonus, float rate, float roll, bool success)
+        {
         Debug.Log("📊 CÁLCULO DE CAPTURA:");
         Debug.Log($"   Base: {BaseCaptureRate:P0}");
         Debug.Log($"   Bônus Força: +{forceBonus:P0} (força: {force:F1})");
@@ -97,6 +95,6 @@ public static class CaptureSystem
         Debug.Log($"   Taxa Final: {rate:P0}");
         Debug.Log($"   Sorteio: {roll:F3} {(success ? "≤" : ">")} {rate:F3}");
         Debug.Log($"   Resultado: {(success ? "✅ CAPTURADO!" : "❌ FALHOU!")}");
-    }
-#endif
+        }
+    #endif
 }

@@ -19,7 +19,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Text pokemonNameText;
 
     [Header("Configurações")]
-    [SerializeField] private float resetDelay = 5f;
+    [SerializeField] private float captureDisplayTime = 5f;
 
     [Header("Configurações de Silhueta")]
     [SerializeField] private bool useLocalSilhouettes = false;
@@ -38,8 +38,7 @@ public class GameManager : MonoBehaviour
             pokemonDisplay.SetActive(false);
 
         #if UNITY_EDITOR
-            Debug.Log("🧪 Modo Editor: iniciando jogo automaticamente em 1 segundo...");
-            Invoke(nameof(StartGame), 1f);
+        Invoke(nameof(StartGame), 1f);
         #endif
     }
 
@@ -48,19 +47,24 @@ public class GameManager : MonoBehaviour
         if (_isPlaying) return;
 
         _isPlaying = true;
-        ResetScene();
+        SpawnNextPokemon();
+    }
+
+    private void SpawnNextPokemon()
+    {
+        ResetPartial();
 
         _currentPokemonId = Random.Range(1, 151);
-        Debug.Log($"🎲 Pokémon sorteado: #{_currentPokemonId}");
+        Debug.Log($"🎲 Próximo Pokémon sorteado: #{_currentPokemonId}");
 
         SpawnSilhouette();
         SpawnPokeball();
         WebGLBridge.RequestPokemonData(_currentPokemonId);
 
         UpdateFeedback("Arraste e solte a Pokébola!");
-        Debug.Log("🎮 Jogo iniciado!");
     }
 
+    #region Silhueta
     private void SpawnSilhouette()
     {
         if (_currentSilhouette != null)
@@ -71,7 +75,6 @@ public class GameManager : MonoBehaviour
         _currentSilhouette.tag = "PokemonSilhouette";
 
         StartCoroutine(LoadSilhouetteImage(_currentPokemonId));
-        Debug.Log("👤 Silhueta criada!");
     }
 
     private void AddColliderIfMissing(GameObject obj)
@@ -86,61 +89,30 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator LoadSilhouetteImage(int pokemonId)
     {
-        var spriteRenderer = _currentSilhouette.GetComponent<SpriteRenderer>();
-        if (spriteRenderer == null)
-        {
-            Debug.LogError("❌ SpriteRenderer não encontrado na silhueta!");
-            yield break;
-        }
+        var renderer = _currentSilhouette.GetComponent<SpriteRenderer>();
+        if (renderer == null) yield break;
 
         if (useLocalSilhouettes)
         {
-            LoadLocalSilhouette(spriteRenderer, pokemonId);
+            var sprite = Resources.Load<Sprite>($"Silhouettes/{pokemonId}");
+            if (sprite != null) renderer.sprite = sprite;
         }
         else
         {
-            yield return LoadWebSilhouette(spriteRenderer, pokemonId);
+            string url = string.Format(silhouetteUrlPattern, pokemonId);
+            using var request = UnityWebRequestTexture.GetTexture(url);
+            yield return request.SendWebRequest();
+            if (request.result == UnityWebRequest.Result.Success)
+            {
+                Texture2D tex = DownloadHandlerTexture.GetContent(request);
+                renderer.sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
+                    new Vector2(0.5f, 0.5f), 100f);
+                renderer.color = Color.black;
+                _currentSilhouette.transform.localScale = Vector3.one * 2f;
+            }
         }
 
-        AdjustSilhouetteSize(spriteRenderer);
-    }
-
-    private void LoadLocalSilhouette(SpriteRenderer renderer, int id)
-    {
-        var sprite = Resources.Load<Sprite>($"Silhouettes/{id}");
-        if (sprite != null)
-        {
-            renderer.sprite = sprite;
-            Debug.Log($"✅ Silhueta local carregada: {id}");
-        }
-        else
-        {
-            Debug.LogWarning($"⚠️ Silhueta local não encontrada: #{id}");
-        }
-    }
-
-    private IEnumerator LoadWebSilhouette(SpriteRenderer renderer, int id)
-    {
-        string url = string.Format(silhouetteUrlPattern, id);
-        using var request = UnityWebRequestTexture.GetTexture(url);
-        yield return request.SendWebRequest();
-
-        if (request.result == UnityWebRequest.Result.Success)
-        {
-            Texture2D texture = DownloadHandlerTexture.GetContent(request);
-            renderer.sprite = Sprite.Create(texture,
-                new Rect(0, 0, texture.width, texture.height),
-                new Vector2(0.5f, 0.5f),
-                100f);
-
-            renderer.color = Color.black;
-            _currentSilhouette.transform.localScale = Vector3.one * 2f;
-            Debug.Log($"✅ Silhueta web carregada: {id}");
-        }
-        else
-        {
-            Debug.LogError($"❌ Erro ao carregar silhueta web: {request.error}");
-        }
+        AdjustSilhouetteSize(renderer);
     }
 
     private void AdjustSilhouetteSize(SpriteRenderer renderer)
@@ -151,10 +123,10 @@ public class GameManager : MonoBehaviour
         float maxDimension = Mathf.Max(renderer.bounds.size.x, renderer.bounds.size.y);
         if (maxDimension > maxSize)
             _currentSilhouette.transform.localScale = Vector3.one * (maxSize / maxDimension);
-
-        Debug.Log($"📏 Silhueta ajustada. Tamanho: {renderer.bounds.size}");
     }
+    #endregion
 
+    #region Pokébola
     private void SpawnPokeball()
     {
         if (_currentPokeball != null)
@@ -166,28 +138,26 @@ public class GameManager : MonoBehaviour
         {
             controller.SetGameManager(this);
             controller.SetForceBar(forceBar);
-
-            if (forceBar != null)
-                Debug.Log("✅ Barra de força conectada!");
-            else
-                Debug.LogWarning("⚠️ ForceBar não configurada!");
         }
-
-        Debug.Log("⚪ Pokébola criada!");
     }
+    #endregion
 
+    #region Captura
     public void OnPokeballHitTarget(float throwForce, float accuracy)
     {
-        Debug.Log($"💥 Colisão! Força: {throwForce:F2}, Precisão: {accuracy:F2}");
         bool success = CaptureSystem.CalculateCapture(throwForce, accuracy);
-
         if (success) HandleCaptureSuccess();
         else HandleCaptureFailed();
     }
 
+    public void OnPokeballMissed()
+    {
+        UpdateFeedback("Você errou! Tente novamente.");
+        StartCoroutine(ResetPokeballAfterDelay(1f));
+    }
+
     private void HandleCaptureSuccess()
     {
-        Debug.Log("✅ Captura bem-sucedida!");
         UpdateFeedback("Capturado! Carregando dados...");
         AudioManager.Instance?.PlayCaptureSuccessSound();
         StartCoroutine(WaitForPokemonData());
@@ -208,13 +178,14 @@ public class GameManager : MonoBehaviour
         {
             DisplayPokemon();
             WebGLBridge.NotifyCaptureSuccess(_currentPokemonData);
-            StartCoroutine(ResetAfterDelay());
+            yield return new WaitForSeconds(captureDisplayTime);
+            SpawnNextPokemon();
         }
         else
         {
-            Debug.LogError("❌ Timeout ao aguardar dados do Pokémon!");
             UpdateFeedback("Erro ao carregar Pokémon. Tente novamente.");
-            StartCoroutine(ResetAfterDelay());
+            yield return new WaitForSeconds(2f);
+            SpawnNextPokemon();
         }
     }
 
@@ -223,7 +194,6 @@ public class GameManager : MonoBehaviour
         var data = JsonUtility.FromJson<PokemonData>(_currentPokemonData);
         if (pokemonDisplay != null) pokemonDisplay.SetActive(true);
         if (pokemonNameText != null) pokemonNameText.text = $"#{data.id} {data.name.ToUpper()}";
-
         if (pokemonImage != null && !string.IsNullOrEmpty(data.image))
             StartCoroutine(LoadPokemonImage(data.image));
 
@@ -231,7 +201,6 @@ public class GameManager : MonoBehaviour
             StartCoroutine(FadeOutSilhouette());
 
         UpdateFeedback($"Você capturou {data.name}!");
-        Debug.Log($"🎉 Pokémon exibido: {data.name}");
     }
 
     private IEnumerator FadeOutSilhouette()
@@ -260,21 +229,14 @@ public class GameManager : MonoBehaviour
 
         if (request.result == UnityWebRequest.Result.Success)
         {
-            Texture2D texture = DownloadHandlerTexture.GetContent(request);
-            pokemonImage.sprite = Sprite.Create(texture,
-                new Rect(0, 0, texture.width, texture.height),
+            Texture2D tex = DownloadHandlerTexture.GetContent(request);
+            pokemonImage.sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
                 new Vector2(0.5f, 0.5f));
-            Debug.Log("✅ Imagem do Pokémon carregada!");
-        }
-        else
-        {
-            Debug.LogError($"❌ Erro ao carregar imagem: {request.error}");
         }
     }
 
     private void HandleCaptureFailed()
     {
-        Debug.Log("❌ Captura falhou!");
         UpdateFeedback("Falhou! Tente novamente!");
         AudioManager.Instance?.PlayCaptureFailSound();
         WebGLBridge.NotifyCaptureFailed();
@@ -286,19 +248,12 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(delay);
         if (_currentPokeball != null) Destroy(_currentPokeball);
         SpawnPokeball();
-        UpdateFeedback("Tente novamente! Arraste a Pokébola!");
+        UpdateFeedback("Arraste e solte a Pokébola!");
     }
+    #endregion
 
-    private IEnumerator ResetAfterDelay()
-    {
-        yield return new WaitForSeconds(resetDelay);
-        ResetScene();
-        _isPlaying = false;
-        WebGLBridge.ReturnToMenu();
-        Debug.Log("🔙 Voltando ao menu...");
-    }
-
-    private void ResetScene()
+    #region Helpers
+    private void ResetPartial()
     {
         if (_currentPokeball != null) Destroy(_currentPokeball);
         if (_currentSilhouette != null) Destroy(_currentSilhouette);
@@ -309,21 +264,25 @@ public class GameManager : MonoBehaviour
     private void UpdateFeedback(string message)
     {
         if (feedbackText != null) feedbackText.text = message;
-        Debug.Log($"💬 Feedback: {message}");
     }
 
     public void ReceivePokemonData(string jsonData)
     {
         _currentPokemonData = jsonData;
-        Debug.Log($"📦 Dados recebidos do React: {jsonData}");
     }
 
     public void OnPokemonDataError(string error)
     {
-        Debug.LogError($"❌ Erro ao receber dados: {error}");
         UpdateFeedback("Erro ao buscar Pokémon. Tente novamente.");
-        StartCoroutine(ResetAfterDelay());
+        StartCoroutine(WaitThenNext());
     }
+
+    private IEnumerator WaitThenNext()
+    {
+        yield return new WaitForSeconds(2f);
+        SpawnNextPokemon();
+    }
+    #endregion
 }
 
 [System.Serializable]
