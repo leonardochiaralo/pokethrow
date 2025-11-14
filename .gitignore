@@ -1,20 +1,46 @@
-# Unity
-PokethrowUnity/[Ll]ibrary/
-PokethrowUnity/[Tt]emp/
-PokethrowUnity/[Oo]bj/
-PokethrowUnity/[Bb]uild/
-PokethrowUnity/[Bb]uilds/
-PokethrowUnity/[Ll]ogs/
-PokethrowUnity/[Uu]ser[Ss]ettings/
+# ===========================
+# Node.js / React / Vite
+# ===========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Unity auto-generated files
-*.csproj
-*.unityproj
-*.sln
+# Build output do Vite/React
+dist/
+dist-ssr/
+*.local
+
+# Editor directories
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
 *.suo
-*.tmp
-*.user
-*.userprefs
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ===========================
+# Unity Project
+# ===========================
+
+# Unity folders
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+
+# Memory Captures
+[Mm]emoryCaptures/
+
+# Asset meta data
 *.pidb
 *.booproj
 *.svd
@@ -23,36 +49,94 @@ PokethrowUnity/[Uu]ser[Ss]ettings/
 *.opendb
 *.VC.db
 
-# Unity meta files
+# Unity3D generated meta files
 *.pidb.meta
 *.pdb.meta
 *.mdb.meta
 
-# OS
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
+# Unity3D generated file on crash reports
+sysinfo.txt
+
+# Builds
+*.apk
+*.aab
+*.unitypackage
+*.app
+
+# Crashlytics
+crashlytics-build.properties
+
+# ===========================
+# ✅ EXCEÇÕES IMPORTANTES
+# ===========================
+
+# Unity build
+!pokethrow-web/public/unity/Build/
+!pokethrow-web/public/unity/Build/**
+!pokethrow-web/public/unity/TemplateData/
+!pokethrow-web/public/unity/TemplateData/**
+
+# ===========================
+# Sistema Operacional
+# ===========================
+
+# Windows
 Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
 
-# Node
-pokethrow-web/node_modules/
-pokethrow-web/dist/
-pokethrow-web/.env
-pokethrow-web/.env.local
-pokethrow-web/.env.production
-pokethrow-web/npm-debug.log*
-pokethrow-web/yarn-debug.log*
-pokethrow-web/yarn-error.log*
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
 
-# Build WebGL (opcional - se quiser versionar o build, remova estas linhas)
-pokethrow-web/public/unity/Build/
-
-# IDEs
-.vscode/
-.idea/
-*.swp
-*.swo
+# Linux
 *~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ===========================
+# Outros
+# ===========================
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Testing
+coverage/
+*.lcov
+.nyc_output/
+
+# Cache
+.cache/
+*.cache
+.parcel-cache/
