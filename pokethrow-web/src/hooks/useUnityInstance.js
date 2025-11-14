@@ -3,6 +3,8 @@ import { useEffect, useCallback } from "react";
 import { pokeApi } from "../services/pokeApi";
 import { useHistoryStore } from "../store/historyStore";
 
+const BASE = import.meta.env.BASE_URL;
+
 export function useUnityInstance(onReturnToMenu) {
   const addPokemon = useHistoryStore((state) => state.addPokemon);
 
@@ -14,10 +16,10 @@ export function useUnityInstance(onReturnToMenu) {
     addEventListener,
     removeEventListener,
   } = useUnityContext({
-    loaderUrl: "/unity/Build/unity.loader.js",
-    dataUrl: "/unity/Build/unity.data",
-    frameworkUrl: "/unity/Build/unity.framework.js",
-    codeUrl: "/unity/Build/unity.wasm",
+    loaderUrl: `${BASE}unity/Build/unity.loader.js`,
+    dataUrl: `${BASE}unity/Build/unity.data`,
+    frameworkUrl: `${BASE}unity/Build/unity.framework.js`,
+    codeUrl: `${BASE}unity/Build/unity.wasm`,
   });
 
   const handleRequestPokemon = useCallback(
