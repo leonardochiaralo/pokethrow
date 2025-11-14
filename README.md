@@ -49,7 +49,7 @@ PokéThrow é um jogo web onde o jogador deve capturar Pokémons misteriosos arr
 
 ### Front-end
 
-- **React 18** - Biblioteca UI
+- **React 19** - Biblioteca UI
 - **Vite** - Build tool
 - **Zustand** - Gerenciamento de estado
 - **Axios** - Requisições HTTP
@@ -114,7 +114,7 @@ pokethrow/
 
 ### Pré-requisitos
 
-- Node.js (v18+)
+- Node.js (v20+)
 - Unity 2023+
 - npm ou yarn
 
@@ -250,7 +250,7 @@ Pokémon e todos os personagens relacionados são © Nintendo/Creatures Inc./GAM
 
 ## 📧 Contato
 
-Desenvolvido por [Seu Nome]
+Desenvolvido por [Leonardo Chiaralo]
 
 - GitHub: [@leonardochiaralo](https://github.com/leonardochiaralo)
 - LinkedIn: [Leonardo Chiaralo](https://linkedin.com/in/leonardochiaralo)
