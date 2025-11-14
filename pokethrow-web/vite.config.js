@@ -11,13 +11,8 @@ export default defineConfig({
     outDir: "dist",
     assetsDir: "assets",
     copyPublicDir: true,
-    minify: "terser",
-    terserOptions: {
-      compress: {
-        drop_console: true,
-      },
-    },
-    chunkSizeWarningLimit: 1000,
+    minify: "esbuild",
+    chunkSizeWarningLimit: 2000,
     rollupOptions: {
       output: {
         manualChunks: {
